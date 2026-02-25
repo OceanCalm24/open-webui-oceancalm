@@ -50,6 +50,7 @@ class Knowledge(Base):
 
     created_at = Column(BigInteger)
     updated_at = Column(BigInteger)
+    tenant_id = Column(String, nullable=True)
 
 
 class KnowledgeModel(BaseModel):

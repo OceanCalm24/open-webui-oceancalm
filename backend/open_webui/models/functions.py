@@ -29,6 +29,7 @@ class Function(Base):
     is_global = Column(Boolean)
     updated_at = Column(BigInteger)
     created_at = Column(BigInteger)
+    tenant_id = Column(String, nullable=True)
 
     __table_args__ = (Index("is_global_idx", "is_global"),)
 

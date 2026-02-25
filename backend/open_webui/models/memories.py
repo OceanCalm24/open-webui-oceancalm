@@ -20,6 +20,7 @@ class Memory(Base):
     content = Column(Text)
     updated_at = Column(BigInteger)
     created_at = Column(BigInteger)
+    tenant_id = Column(String, nullable=True)
 
 
 class MemoryModel(BaseModel):

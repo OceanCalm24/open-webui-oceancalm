@@ -33,6 +33,7 @@ class Prompt(Base):
     version_id = Column(Text, nullable=True)  # Points to active history entry
     created_at = Column(BigInteger, nullable=True)
     updated_at = Column(BigInteger, nullable=True)
+    tenant_id = Column(String, nullable=True)
 
 
 class PromptModel(BaseModel):
