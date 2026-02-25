@@ -86,6 +86,7 @@ class ChatModel(BaseModel):
 
     meta: dict = {}
     folder_id: Optional[str] = None
+    tenant_id: Optional[str] = None
 
 
 class ChatFile(Base):
@@ -162,6 +163,7 @@ class ChatResponse(BaseModel):
     pinned: Optional[bool] = False
     meta: dict = {}
     folder_id: Optional[str] = None
+    tenant_id: Optional[str] = None
 
 
 class ChatTitleIdResponse(BaseModel):
