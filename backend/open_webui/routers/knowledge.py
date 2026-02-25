@@ -28,7 +28,7 @@ from open_webui.routers.retrieval import (
 from open_webui.storage.provider import Storage
 
 from open_webui.constants import ERROR_MESSAGES
-from open_webui.utils.auth import get_verified_user, get_admin_user
+from open_webui.utils.auth import get_verified_user, get_admin_user, get_tenant_context
 from open_webui.utils.access_control import has_permission
 from open_webui.models.access_grants import AccessGrants, has_public_read_access_grant
 
@@ -249,6 +249,7 @@ async def create_new_knowledge(
     request: Request,
     form_data: KnowledgeForm,
     user=Depends(get_verified_user),
+    tenant_id: Optional[str] = Depends(get_tenant_context),
 ):
     # NOTE: We intentionally do NOT use Depends(get_session) here.
     # Database operations (has_permission, insert_new_knowledge) manage their own sessions.
@@ -274,7 +275,7 @@ async def create_new_knowledge(
     ):
         form_data.access_grants = []
 
-    knowledge = Knowledges.insert_new_knowledge(user.id, form_data)
+    knowledge = Knowledges.insert_new_knowledge(user.id, form_data, tenant_id=tenant_id)
 
     if knowledge:
         # Embed knowledge base for semantic search

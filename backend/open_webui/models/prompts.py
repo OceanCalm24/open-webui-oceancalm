@@ -114,7 +114,7 @@ class PromptsTable:
         return PromptModel.model_validate(prompt_data)
 
     def insert_new_prompt(
-        self, user_id: str, form_data: PromptForm, db: Optional[Session] = None
+        self, user_id: str, form_data: PromptForm, tenant_id: Optional[str] = None, db: Optional[Session] = None
     ) -> Optional[PromptModel]:
         now = int(time.time())
         prompt_id = str(uuid.uuid4())
@@ -136,7 +136,7 @@ class PromptsTable:
 
         try:
             with get_db_context(db) as db:
-                result = Prompt(**prompt.model_dump(exclude={"access_grants"}))
+                result = Prompt(**prompt.model_dump(exclude={"access_grants"}), tenant_id=tenant_id)
                 db.add(result)
                 db.commit()
                 db.refresh(result)
@@ -204,14 +204,16 @@ class PromptsTable:
         except Exception:
             return None
 
-    def get_prompts(self, db: Optional[Session] = None) -> list[PromptUserResponse]:
+    def get_prompts(self, tenant_id: Optional[str] = None, db: Optional[Session] = None) -> list[PromptUserResponse]:
         with get_db_context(db) as db:
-            all_prompts = (
+            query = (
                 db.query(Prompt)
                 .filter(Prompt.is_active == True)
                 .order_by(Prompt.updated_at.desc())
-                .all()
             )
+            if tenant_id is not None:
+                query = query.filter(Prompt.tenant_id == tenant_id)
+            all_prompts = query.all()
 
             user_ids = list(set(prompt.user_id for prompt in all_prompts))
             prompt_ids = [prompt.id for prompt in all_prompts]

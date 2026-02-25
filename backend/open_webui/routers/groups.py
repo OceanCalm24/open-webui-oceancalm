@@ -20,7 +20,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from open_webui.internal.db import get_session
 from sqlalchemy.orm import Session
 
-from open_webui.utils.auth import get_admin_user, get_verified_user
+from open_webui.utils.auth import get_admin_user, get_verified_user, get_tenant_context
 
 log = logging.getLogger(__name__)
 
@@ -61,9 +61,10 @@ async def create_new_group(
     form_data: GroupForm,
     user=Depends(get_admin_user),
     db: Session = Depends(get_session),
+    tenant_id: Optional[str] = Depends(get_tenant_context),
 ):
     try:
-        group = Groups.insert_new_group(user.id, form_data, db=db)
+        group = Groups.insert_new_group(user.id, form_data, tenant_id=tenant_id, db=db)
         if group:
             return GroupResponse(
                 **group.model_dump(),

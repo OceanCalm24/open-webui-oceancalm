@@ -161,7 +161,7 @@ class KnowledgeTable:
         return KnowledgeModel.model_validate(knowledge_data)
 
     def insert_new_knowledge(
-        self, user_id: str, form_data: KnowledgeForm, db: Optional[Session] = None
+        self, user_id: str, form_data: KnowledgeForm, tenant_id: Optional[str] = None, db: Optional[Session] = None
     ) -> Optional[KnowledgeModel]:
         with get_db_context(db) as db:
             knowledge = KnowledgeModel(
@@ -176,7 +176,7 @@ class KnowledgeTable:
             )
 
             try:
-                result = Knowledge(**knowledge.model_dump(exclude={"access_grants"}))
+                result = Knowledge(**knowledge.model_dump(exclude={"access_grants"}), tenant_id=tenant_id)
                 db.add(result)
                 db.commit()
                 db.refresh(result)
@@ -191,12 +191,13 @@ class KnowledgeTable:
                 return None
 
     def get_knowledge_bases(
-        self, skip: int = 0, limit: int = 30, db: Optional[Session] = None
+        self, skip: int = 0, limit: int = 30, tenant_id: Optional[str] = None, db: Optional[Session] = None
     ) -> list[KnowledgeUserModel]:
         with get_db_context(db) as db:
-            all_knowledge = (
-                db.query(Knowledge).order_by(Knowledge.updated_at.desc()).all()
-            )
+            query = db.query(Knowledge).order_by(Knowledge.updated_at.desc())
+            if tenant_id is not None:
+                query = query.filter(Knowledge.tenant_id == tenant_id)
+            all_knowledge = query.all()
             user_ids = list(set(knowledge.user_id for knowledge in all_knowledge))
             knowledge_ids = [knowledge.id for knowledge in all_knowledge]
 

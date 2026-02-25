@@ -109,6 +109,7 @@ class FunctionsTable:
         user_id: str,
         type: str,
         form_data: FunctionForm,
+        tenant_id: Optional[str] = None,
         db: Optional[Session] = None,
     ) -> Optional[FunctionModel]:
         function = FunctionModel(
@@ -123,7 +124,7 @@ class FunctionsTable:
 
         try:
             with get_db_context(db) as db:
-                result = Function(**function.model_dump())
+                result = Function(**function.model_dump(), tenant_id=tenant_id)
                 db.add(result)
                 db.commit()
                 db.refresh(result)
@@ -216,14 +217,16 @@ class FunctionsTable:
             return []
 
     def get_functions(
-        self, active_only=False, include_valves=False, db: Optional[Session] = None
+        self, active_only=False, include_valves=False, tenant_id: Optional[str] = None, db: Optional[Session] = None
     ) -> list[FunctionModel | FunctionWithValvesModel]:
         with get_db_context(db) as db:
             if active_only:
-                functions = db.query(Function).filter_by(is_active=True).all()
-
+                query = db.query(Function).filter_by(is_active=True)
             else:
-                functions = db.query(Function).all()
+                query = db.query(Function)
+            if tenant_id is not None:
+                query = query.filter(Function.tenant_id == tenant_id)
+            functions = query.all()
 
             if include_valves:
                 return [

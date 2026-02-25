@@ -98,3 +98,43 @@ class TestTenantModel:
         assert "tenant_id" in sig3.parameters, "get_chats_by_user_id missing tenant_id param"
 
         print("Chat CRUD methods accept tenant_id: OK")
+
+    def test_remaining_crud_methods_accept_tenant_id(self):
+        """Verify all remaining CRUD methods across 8 models accept tenant_id parameter."""
+        import inspect
+        from open_webui.models.memories import Memories
+        from open_webui.models.knowledge import Knowledges
+        from open_webui.models.tools import Tools
+        from open_webui.models.functions import Functions
+        from open_webui.models.models import Models
+        from open_webui.models.prompts import Prompts
+        from open_webui.models.files import Files
+        from open_webui.models.groups import Groups
+
+        checks = [
+            (Memories.insert_new_memory, "insert_new_memory"),
+            (Memories.get_memories_by_user_id, "get_memories_by_user_id"),
+            (Knowledges.insert_new_knowledge, "insert_new_knowledge"),
+            (Knowledges.get_knowledge_bases, "get_knowledge_bases"),
+            (Tools.insert_new_tool, "insert_new_tool"),
+            (Tools.get_tools, "get_tools"),
+            (Tools.get_tools_by_user_id, "get_tools_by_user_id"),
+            (Functions.insert_new_function, "insert_new_function"),
+            (Functions.get_functions, "get_functions"),
+            (Models.insert_new_model, "insert_new_model"),
+            (Models.get_all_models, "get_all_models"),
+            (Models.get_models, "get_models"),
+            (Prompts.insert_new_prompt, "insert_new_prompt"),
+            (Prompts.get_prompts, "get_prompts"),
+            (Files.insert_new_file, "insert_new_file"),
+            (Files.get_files, "get_files"),
+            (Files.get_files_by_user_id, "get_files_by_user_id"),
+            (Groups.insert_new_group, "insert_new_group"),
+            (Groups.get_all_groups, "get_all_groups"),
+        ]
+
+        for method, name in checks:
+            sig = inspect.signature(method)
+            assert "tenant_id" in sig.parameters, f"{name} missing tenant_id param"
+
+        print("All remaining CRUD methods accept tenant_id: OK")

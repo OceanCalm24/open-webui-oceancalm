@@ -132,7 +132,7 @@ class GroupListResponse(BaseModel):
 
 class GroupTable:
     def insert_new_group(
-        self, user_id: str, form_data: GroupForm, db: Optional[Session] = None
+        self, user_id: str, form_data: GroupForm, tenant_id: Optional[str] = None, db: Optional[Session] = None
     ) -> Optional[GroupModel]:
         with get_db_context(db) as db:
             group = GroupModel(
@@ -146,7 +146,7 @@ class GroupTable:
             )
 
             try:
-                result = Group(**group.model_dump())
+                result = Group(**group.model_dump(), tenant_id=tenant_id)
                 db.add(result)
                 db.commit()
                 db.refresh(result)
@@ -158,9 +158,12 @@ class GroupTable:
             except Exception:
                 return None
 
-    def get_all_groups(self, db: Optional[Session] = None) -> list[GroupModel]:
+    def get_all_groups(self, tenant_id: Optional[str] = None, db: Optional[Session] = None) -> list[GroupModel]:
         with get_db_context(db) as db:
-            groups = db.query(Group).order_by(Group.updated_at.desc()).all()
+            query = db.query(Group).order_by(Group.updated_at.desc())
+            if tenant_id is not None:
+                query = query.filter(Group.tenant_id == tenant_id)
+            groups = query.all()
             return [GroupModel.model_validate(group) for group in groups]
 
     def get_groups(self, filter, db: Optional[Session] = None) -> list[GroupResponse]:
