@@ -51,6 +51,7 @@ class Chat(Base):
 
     meta = Column(JSON, server_default="{}")
     folder_id = Column(Text, nullable=True)
+    tenant_id = Column(String, nullable=True)
 
     __table_args__ = (
         # Performance indexes for common queries
@@ -64,6 +65,7 @@ class Chat(Base):
         Index("updated_at_user_id_idx", "updated_at", "user_id"),
         # WHERE folder_id = ... AND user_id = ...
         Index("folder_id_user_id_idx", "folder_id", "user_id"),
+        Index("chat_tenant_id_idx", "tenant_id"),
     )
 
 

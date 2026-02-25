@@ -54,3 +54,28 @@ class TestTenantModel:
         fields = UserModel.model_fields
         assert "tenant_id" in fields
         assert "is_super_admin" in fields
+
+    def test_chat_has_tenant_id_field(self):
+        from open_webui.models.chats import Chat
+        from sqlalchemy import inspect
+
+        mapper = inspect(Chat)
+        col_names = [c.key for c in mapper.columns]
+        assert "tenant_id" in col_names
+
+    def test_all_core_models_have_tenant_id(self):
+        from sqlalchemy import inspect
+        from open_webui.models.memories import Memory
+        from open_webui.models.groups import Group
+        from open_webui.models.knowledge import Knowledge
+        from open_webui.models.tools import Tool
+        from open_webui.models.functions import Function
+        from open_webui.models.models import Model
+        from open_webui.models.prompts import Prompt
+        from open_webui.models.files import File
+
+        models_to_check = [Memory, Group, Knowledge, Tool, Function, Model, Prompt, File]
+        for model_class in models_to_check:
+            mapper = inspect(model_class)
+            col_names = [c.key for c in mapper.columns]
+            assert "tenant_id" in col_names, f"{model_class.__name__} missing tenant_id"
