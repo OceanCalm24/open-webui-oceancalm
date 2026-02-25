@@ -73,6 +73,9 @@ class User(Base):
     oauth = Column(JSON, nullable=True)
     scim = Column(JSON, nullable=True)
 
+    tenant_id = Column(String, nullable=True)   # NULL for super admins
+    is_super_admin = Column(Boolean, default=False, nullable=False, server_default="false")
+
     last_active_at = Column(BigInteger)
     updated_at = Column(BigInteger)
     created_at = Column(BigInteger)
@@ -105,6 +108,9 @@ class UserModel(BaseModel):
 
     oauth: Optional[dict] = None
     scim: Optional[dict] = None
+
+    tenant_id: Optional[str] = None
+    is_super_admin: bool = False
 
     last_active_at: int  # timestamp in epoch
     updated_at: int  # timestamp in epoch

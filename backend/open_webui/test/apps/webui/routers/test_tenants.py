@@ -47,3 +47,10 @@ class TestTenantModel:
             TenantForm(name="Dup2", slug=f"dup-slug-{slug_suffix}")
         )
         assert result is None
+
+    def test_user_has_tenant_id_field(self):
+        from open_webui.models.users import UserModel
+
+        fields = UserModel.model_fields
+        assert "tenant_id" in fields
+        assert "is_super_admin" in fields
