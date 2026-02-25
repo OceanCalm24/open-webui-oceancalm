@@ -858,5 +858,30 @@ class UsersTable:
                 return user.last_active_at >= three_minutes_ago
             return False
 
+    def get_users_by_tenant_id(
+        self, tenant_id: str, db: Optional[Session] = None
+    ) -> list[UserModel]:
+        try:
+            with get_db_context(db) as db:
+                users = db.query(User).filter(User.tenant_id == tenant_id).all()
+                return [UserModel.model_validate(u) for u in users]
+        except Exception:
+            return []
+
+    def update_user_tenant(
+        self, user_id: str, tenant_id: Optional[str], db: Optional[Session] = None
+    ) -> Optional[UserModel]:
+        try:
+            with get_db_context(db) as db:
+                user = db.query(User).filter_by(id=user_id).first()
+                if not user:
+                    return None
+                user.tenant_id = tenant_id
+                db.commit()
+                db.refresh(user)
+                return UserModel.model_validate(user)
+        except Exception:
+            return None
+
 
 Users = UsersTable()

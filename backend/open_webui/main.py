@@ -96,6 +96,7 @@ from open_webui.routers import (
     users,
     utils,
     scim,
+    tenants,
 )
 
 from open_webui.routers.retrieval import (
@@ -1544,6 +1545,8 @@ app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 # SCIM 2.0 API for identity management
 if ENABLE_SCIM:
     app.include_router(scim.router, prefix="/api/v1/scim/v2", tags=["scim"])
+
+app.include_router(tenants.router, prefix="/api/v1/tenants", tags=["tenants"])
 
 
 try:
