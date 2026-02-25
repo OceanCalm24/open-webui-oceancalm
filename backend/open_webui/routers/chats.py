@@ -33,7 +33,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 
-from open_webui.utils.auth import get_admin_user, get_verified_user
+from open_webui.utils.auth import get_admin_user, get_tenant_context, get_verified_user
 from open_webui.utils.access_control import has_permission
 
 log = logging.getLogger(__name__)
@@ -52,6 +52,7 @@ def get_session_user_chat_list(
     page: Optional[int] = None,
     include_pinned: Optional[bool] = False,
     include_folders: Optional[bool] = False,
+    tenant_id: Optional[str] = Depends(get_tenant_context),
     db: Session = Depends(get_session),
 ):
     try:
@@ -65,6 +66,7 @@ def get_session_user_chat_list(
                 include_pinned=include_pinned,
                 skip=skip,
                 limit=limit,
+                tenant_id=tenant_id,
                 db=db,
             )
         else:
@@ -72,6 +74,7 @@ def get_session_user_chat_list(
                 user.id,
                 include_folders=include_folders,
                 include_pinned=include_pinned,
+                tenant_id=tenant_id,
                 db=db,
             )
     except Exception as e:
@@ -595,10 +598,11 @@ async def get_user_chat_list_by_user_id(
 async def create_new_chat(
     form_data: ChatForm,
     user=Depends(get_verified_user),
+    tenant_id: Optional[str] = Depends(get_tenant_context),
     db: Session = Depends(get_session),
 ):
     try:
-        chat = Chats.insert_new_chat(user.id, form_data, db=db)
+        chat = Chats.insert_new_chat(user.id, form_data, tenant_id=tenant_id, db=db)
         return ChatResponse(**chat.model_dump())
     except Exception as e:
         log.exception(e)

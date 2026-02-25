@@ -79,3 +79,22 @@ class TestTenantModel:
             mapper = inspect(model_class)
             col_names = [c.key for c in mapper.columns]
             assert "tenant_id" in col_names, f"{model_class.__name__} missing tenant_id"
+
+    def test_chat_scoping_methods_accept_tenant_id(self):
+        """Verify Chat CRUD methods accept tenant_id parameter."""
+        import inspect
+        from open_webui.models.chats import Chats
+
+        # insert_new_chat should accept tenant_id
+        sig = inspect.signature(Chats.insert_new_chat)
+        assert "tenant_id" in sig.parameters, "insert_new_chat missing tenant_id param"
+
+        # get_chat_title_id_list_by_user_id should accept tenant_id
+        sig2 = inspect.signature(Chats.get_chat_title_id_list_by_user_id)
+        assert "tenant_id" in sig2.parameters, "get_chat_title_id_list_by_user_id missing tenant_id param"
+
+        # get_chats_by_user_id should accept tenant_id
+        sig3 = inspect.signature(Chats.get_chats_by_user_id)
+        assert "tenant_id" in sig3.parameters, "get_chats_by_user_id missing tenant_id param"
+
+        print("Chat CRUD methods accept tenant_id: OK")

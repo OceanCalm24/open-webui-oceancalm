@@ -295,7 +295,7 @@ class ChatTable:
         return changed
 
     def insert_new_chat(
-        self, user_id: str, form_data: ChatForm, db: Optional[Session] = None
+        self, user_id: str, form_data: ChatForm, tenant_id: Optional[str] = None, db: Optional[Session] = None
     ) -> Optional[ChatModel]:
         with get_db_context(db) as db:
             id = str(uuid.uuid4())
@@ -310,6 +310,7 @@ class ChatTable:
                     ),
                     "chat": self._clean_null_bytes(form_data.chat),
                     "folder_id": form_data.folder_id,
+                    "tenant_id": tenant_id,
                     "created_at": int(time.time()),
                     "updated_at": int(time.time()),
                 }
@@ -882,10 +883,14 @@ class ChatTable:
         include_pinned: bool = False,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
+        tenant_id: Optional[str] = None,
         db: Optional[Session] = None,
     ) -> list[ChatTitleIdResponse]:
         with get_db_context(db) as db:
             query = db.query(Chat).filter_by(user_id=user_id)
+
+            if tenant_id is not None:
+                query = query.filter(Chat.tenant_id == tenant_id)
 
             if not include_folders:
                 query = query.filter_by(folder_id=None)
@@ -1012,14 +1017,13 @@ class ChatTable:
             return None
 
     def get_chats(
-        self, skip: int = 0, limit: int = 50, db: Optional[Session] = None
+        self, skip: int = 0, limit: int = 50, tenant_id: Optional[str] = None, db: Optional[Session] = None
     ) -> list[ChatModel]:
         with get_db_context(db) as db:
-            all_chats = (
-                db.query(Chat)
-                # .limit(limit).offset(skip)
-                .order_by(Chat.updated_at.desc())
-            )
+            query = db.query(Chat)
+            if tenant_id is not None:
+                query = query.filter(Chat.tenant_id == tenant_id)
+            all_chats = query.order_by(Chat.updated_at.desc())
             return [ChatModel.model_validate(chat) for chat in all_chats]
 
     def get_chats_by_user_id(
@@ -1028,10 +1032,14 @@ class ChatTable:
         filter: Optional[dict] = None,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
+        tenant_id: Optional[str] = None,
         db: Optional[Session] = None,
     ) -> ChatListResponse:
         with get_db_context(db) as db:
             query = db.query(Chat).filter_by(user_id=user_id)
+
+            if tenant_id is not None:
+                query = query.filter(Chat.tenant_id == tenant_id)
 
             if filter:
                 if filter.get("updated_at"):
