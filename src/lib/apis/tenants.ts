@@ -137,6 +137,56 @@ export const getTenantUsers = async (token: string, tenantId: string): Promise<T
 	return error;
 };
 
+export const getAgencyUsers = async (token: string): Promise<TenantUser[]> => {
+	const result = await fetch(`${WEBUI_API_BASE_URL}/tenants/agency/users`, {
+		method: 'GET',
+		headers: { Accept: 'application/json', authorization: `Bearer ${token}` }
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json() as Promise<TenantUser[]>;
+		})
+		.catch((err) => {
+			throw err;
+		});
+	return result;
+};
+
+export const addAgencyUser = async (token: string, email: string): Promise<TenantUser> => {
+	const result = await fetch(`${WEBUI_API_BASE_URL}/tenants/agency/users`, {
+		method: 'POST',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({ email })
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json() as Promise<TenantUser>;
+		})
+		.catch((err) => {
+			throw err;
+		});
+	return result;
+};
+
+export const removeAgencyUser = async (token: string, userId: string): Promise<boolean> => {
+	const result = await fetch(`${WEBUI_API_BASE_URL}/tenants/agency/users/${userId}`, {
+		method: 'DELETE',
+		headers: { Accept: 'application/json', authorization: `Bearer ${token}` }
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return true;
+		})
+		.catch((err) => {
+			throw err;
+		});
+	return result;
+};
+
 export const addTenantUser = async (
 	token: string,
 	tenantId: string,

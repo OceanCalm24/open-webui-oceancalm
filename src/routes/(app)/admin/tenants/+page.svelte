@@ -2,14 +2,17 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { user } from '$lib/stores';
-	import { getTenants, createTenant, updateTenant } from '$lib/apis/tenants';
-	import type { Tenant } from '$lib/apis/tenants';
+	import { getTenants, createTenant, updateTenant, getAgencyUsers, addAgencyUser, removeAgencyUser } from '$lib/apis/tenants';
+	import type { Tenant, TenantUser } from '$lib/apis/tenants';
 
 	let tenants: Tenant[] = [];
+	let agencyUsers: TenantUser[] = [];
 	let loading = true;
 	let showCreateForm = false;
+	let showAddAgency = false;
 	let newName = '';
 	let newSlug = '';
+	let newAgencyEmail = '';
 	let error = '';
 
 	onMount(async () => {
@@ -22,11 +25,35 @@
 
 	async function loadTenants() {
 		try {
-			tenants = await getTenants(localStorage.token);
+			[tenants, agencyUsers] = await Promise.all([
+				getTenants(localStorage.token),
+				getAgencyUsers(localStorage.token)
+			]);
 		} catch (e) {
-			error = 'Failed to load tenants';
+			error = 'Failed to load data';
 		} finally {
 			loading = false;
+		}
+	}
+
+	async function handleAddAgencyUser() {
+		if (!newAgencyEmail) return;
+		try {
+			await addAgencyUser(localStorage.token, newAgencyEmail);
+			newAgencyEmail = '';
+			showAddAgency = false;
+			await loadTenants();
+		} catch (e: any) {
+			error = e?.detail || 'Failed to add agency user';
+		}
+	}
+
+	async function handleRemoveAgencyUser(userId: string) {
+		try {
+			await removeAgencyUser(localStorage.token, userId);
+			await loadTenants();
+		} catch (e: any) {
+			error = e?.detail || 'Failed to remove agency user';
 		}
 	}
 
@@ -101,7 +128,69 @@
 			</div>
 		</div>
 	{/if}
+</div>
 
+<!-- Agency Team Section -->
+<div class="p-6 max-w-5xl mx-auto mt-2">
+	<div class="flex items-center justify-between mb-3">
+		<h2 class="text-lg font-semibold">Agency Team <span class="text-sm font-normal text-gray-500">(Super Admins)</span></h2>
+		<button
+			class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+			on:click={() => (showAddAgency = !showAddAgency)}
+		>
+			+ Add Member
+		</button>
+	</div>
+
+	{#if showAddAgency}
+		<div class="mb-4 p-4 border rounded bg-gray-50 dark:bg-gray-800 flex gap-3">
+			<input
+				bind:value={newAgencyEmail}
+				placeholder="Email of existing user to promote"
+				type="email"
+				class="border rounded px-3 py-2 flex-1"
+			/>
+			<button
+				class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+				on:click={handleAddAgencyUser}
+			>
+				Promote to Super Admin
+			</button>
+		</div>
+	{/if}
+
+	<table class="w-full border-collapse">
+		<thead>
+			<tr class="border-b text-left text-sm text-gray-500">
+				<th class="py-2 pr-4">Name</th>
+				<th class="py-2 pr-4">Email</th>
+				<th class="py-2">Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			{#each agencyUsers as member}
+				<tr class="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
+					<td class="py-3 pr-4 font-medium">{member.name}</td>
+					<td class="py-3 pr-4 text-gray-500 text-sm">{member.email}</td>
+					<td class="py-3">
+						{#if member.id !== $user?.id}
+							<button
+								class="text-sm text-red-500 hover:underline"
+								on:click={() => handleRemoveAgencyUser(member.id)}
+							>
+								Remove
+							</button>
+						{:else}
+							<span class="text-xs text-gray-400">You</span>
+						{/if}
+					</td>
+				</tr>
+			{/each}
+		</tbody>
+	</table>
+</div>
+
+<div class="p-6 max-w-5xl mx-auto border-t border-gray-200 dark:border-gray-700 pt-6">
 	{#if loading}
 		<p class="text-gray-500">Loading...</p>
 	{:else if tenants.length === 0}

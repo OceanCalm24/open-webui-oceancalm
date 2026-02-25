@@ -115,3 +115,45 @@ async def remove_tenant_user(
         raise HTTPException(status_code=404, detail="User not found in this tenant")
     Users.update_user_tenant(user_id, None)
     return {"success": True}
+
+
+####################
+# Agency Team (Super Admin) Management
+####################
+
+
+class AgencyUserForm(BaseModel):
+    email: str
+
+
+@router.get("/agency/users")
+async def list_agency_users(admin=Depends(get_super_admin_user)):
+    """List all super admins (agency team members)."""
+    all_users = Users.get_users()
+    return [u for u in all_users if getattr(u, "is_super_admin", False)]
+
+
+@router.post("/agency/users")
+async def add_agency_user(form: AgencyUserForm, admin=Depends(get_super_admin_user)):
+    """Promote an existing user to super admin."""
+    user = Users.get_user_by_email(form.email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    updated = Users.update_user_by_id(user.id, {"is_super_admin": True, "tenant_id": None})
+    if not updated:
+        raise HTTPException(status_code=500, detail="Failed to update user")
+    return updated
+
+
+@router.delete("/agency/users/{user_id}")
+async def remove_agency_user(user_id: str, admin=Depends(get_super_admin_user)):
+    """Demote a super admin back to regular user."""
+    if user_id == admin.id:
+        raise HTTPException(status_code=400, detail="Cannot remove your own super admin status")
+    user = Users.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    updated = Users.update_user_by_id(user_id, {"is_super_admin": False})
+    if not updated:
+        raise HTTPException(status_code=500, detail="Failed to update user")
+    return {"success": True}
