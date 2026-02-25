@@ -16,8 +16,6 @@ class TestTenantsRouterStructure:
         """Verify all expected routes are registered."""
         from open_webui.routers.tenants import router
 
-        routes = {(r.path, list(r.methods)) for r in router.routes}
-
         # Check all expected paths exist
         paths = {r.path for r in router.routes}
         assert "/" in paths
@@ -43,6 +41,6 @@ class TestTenantsRouterStructure:
         from open_webui.utils.auth import get_super_admin_user
 
         for route in router.routes:
-            dep_funcs = [d.dependency for d in route.dependencies]
-            assert get_super_admin_user in dep_funcs, \
+            dep_calls = [d.call for d in route.dependant.dependencies]
+            assert get_super_admin_user in dep_calls, \
                 f"Route {route.path} missing get_super_admin_user dependency"
