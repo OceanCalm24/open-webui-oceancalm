@@ -462,3 +462,48 @@ def create_admin_user(email: str, password: str, name: str = "Admin"):
     except Exception as e:
         log.error(f"Error creating admin account: {e}")
         return None
+
+
+####################
+# Tenant Context
+####################
+
+
+def get_tenant_context(
+    request: Request,
+    user=Depends(get_verified_user),
+) -> str:
+    """
+    Returns the tenant_id for the current request.
+    - Normal users: returns their user.tenant_id
+    - Super admins: returns X-Tenant-ID header value (required when acting on a tenant)
+    - Raises 403 if tenant context cannot be determined
+    """
+    if user.is_super_admin:
+        override_id = request.headers.get("x-tenant-id") or request.headers.get(
+            "X-Tenant-ID"
+        )
+        if override_id:
+            return override_id
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super admins must provide X-Tenant-ID header",
+        )
+
+    if not user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tenant assigned to this user",
+        )
+
+    return user.tenant_id
+
+
+def get_super_admin_user(user=Depends(get_current_user)):
+    """Dependency that allows only super admins."""
+    if not user.is_super_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super admin access required",
+        )
+    return user
