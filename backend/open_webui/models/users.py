@@ -387,11 +387,15 @@ class UsersTable:
         filter: Optional[dict] = None,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
+        tenant_id: Optional[str] = None,
         db: Optional[Session] = None,
     ) -> dict:
         with get_db_context(db) as db:
             # Join GroupMember so we can order by group_id when requested
             query = db.query(User).options(defer(User.profile_image_url))
+
+            if tenant_id is not None:
+                query = query.filter(User.tenant_id == tenant_id)
 
             if filter:
                 query_key = filter.get("query")

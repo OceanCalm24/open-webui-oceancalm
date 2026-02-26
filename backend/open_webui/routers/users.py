@@ -78,7 +78,9 @@ async def get_users(
 
     filter["direction"] = direction
 
-    result = Users.get_users(filter=filter, skip=skip, limit=limit, db=db)
+    result = Users.get_users(
+        filter=filter, skip=skip, limit=limit, tenant_id=user.tenant_id, db=db
+    )
 
     users = result["users"]
     total = result["total"]
@@ -106,7 +108,7 @@ async def get_all_users(
     user=Depends(get_admin_user),
     db: Session = Depends(get_session),
 ):
-    return Users.get_users(db=db)
+    return Users.get_users(tenant_id=user.tenant_id, db=db)
 
 
 @router.get("/search", response_model=UserInfoListResponse)
@@ -131,7 +133,9 @@ async def search_users(
     if direction:
         filter["direction"] = direction
 
-    return Users.get_users(filter=filter, skip=skip, limit=limit, db=db)
+    return Users.get_users(
+        filter=filter, skip=skip, limit=limit, tenant_id=user.tenant_id, db=db
+    )
 
 
 ############################

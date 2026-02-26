@@ -472,23 +472,18 @@ def create_admin_user(email: str, password: str, name: str = "Admin"):
 def get_tenant_context(
     request: Request,
     user=Depends(get_verified_user),
-) -> str:
+) -> Optional[str]:
     """
     Returns the tenant_id for the current request.
     - Normal users: returns their user.tenant_id
-    - Super admins: returns X-Tenant-ID header value (required when acting on a tenant)
-    - Raises 403 if tenant context cannot be determined
+    - Super admins: returns X-Tenant-ID header value if provided, else None (no tenant scope)
+    - Raises 403 if a non-super-admin has no tenant assigned
     """
     if user.is_super_admin:
         override_id = request.headers.get("x-tenant-id") or request.headers.get(
             "X-Tenant-ID"
         )
-        if override_id:
-            return override_id
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Super admins must provide X-Tenant-ID header",
-        )
+        return override_id  # None means no tenant filter — super admin sees their own data
 
     if not user.tenant_id:
         raise HTTPException(
