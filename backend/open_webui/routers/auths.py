@@ -228,6 +228,8 @@ async def get_session_user(
         "status_message": user.status_message,
         "status_expires_at": user.status_expires_at,
         "permissions": user_permissions,
+        "is_super_admin": user.is_super_admin,
+        "tenant_id": user.tenant_id,
     }
 
 
