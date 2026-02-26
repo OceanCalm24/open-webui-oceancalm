@@ -36,6 +36,13 @@
 		}
 	}
 
+	function extractError(e: any, fallback: string): string {
+		const detail = e?.detail;
+		if (typeof detail === 'string') return detail;
+		if (Array.isArray(detail)) return detail.map((d: any) => d?.msg || JSON.stringify(d)).join(', ');
+		return fallback;
+	}
+
 	async function handleAddAgencyUser() {
 		if (!newAgencyEmail) return;
 		try {
@@ -44,7 +51,7 @@
 			showAddAgency = false;
 			await loadTenants();
 		} catch (e: any) {
-			error = e?.detail || 'Failed to add agency user';
+			error = extractError(e, 'Failed to add agency user');
 		}
 	}
 
@@ -53,7 +60,7 @@
 			await removeAgencyUser(localStorage.token, userId);
 			await loadTenants();
 		} catch (e: any) {
-			error = e?.detail || 'Failed to remove agency user';
+			error = extractError(e, 'Failed to remove agency user');
 		}
 	}
 
