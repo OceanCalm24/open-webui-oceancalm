@@ -284,10 +284,10 @@
 					} else {
 						return e.name;
 					}
-				}, '')} • Ocean Calm</title
+				}, '')} • Ocean Calm AI</title
 		>
 	{:else}
-		<title>#{channel?.name ?? 'Channel'} • Ocean Calm</title>
+		<title>#{channel?.name ?? 'Channel'} • Ocean Calm AI</title>
 	{/if}
 </svelte:head>
 
