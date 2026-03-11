@@ -40,7 +40,13 @@
       "Bash(/Library/Frameworks/Python.framework/Versions/3.11/bin/pytest:*)",
       "Bash(git remote set-url:*)",
       "Bash(git push:*)",
-      "Bash(magick $SRC:*)"
+      "Bash(magick $SRC:*)",
+      "Bash(git merge:*)",
+      "Bash(git checkout:*)",
+      "Bash(for f:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(which railway:*)",
+      "Bash(railway help:*)"
     ]
   }
 }

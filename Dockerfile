@@ -140,7 +140,7 @@ RUN echo "cache-bust-v5" && pip3 install --no-cache-dir uv && \
     # If you use CUDA the whisper and embedding model will be downloaded on first use
     # fix: pin torch<=2.9.1 - torch 2.10.0 aarch64 wheels cause SIGILL on ARM devices (RPi 4 Cortex-A72) #21349
     pip3 install 'torch<=2.9.1' torchvision torchaudio --index-url https://download.pytorch.org/whl/$USE_CUDA_DOCKER_VER --no-cache-dir && \
-    pip3 install --no-cache-dir 'uvicorn[standard]==0.41.0' fastapi==0.135.1 pydantic==2.12.5 'typer>=0.12.0' && \
+    pip3 install --no-cache-dir 'uvicorn[standard]==0.41.0' fastapi==0.135.1 pydantic==2.12.5 'typer>=0.12.0' 'typing-extensions>=4.10.0' 'python-dotenv>=1.0.1' && \
     uv pip install --system -r requirements.txt --no-cache-dir && \
     python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['RAG_EMBEDDING_MODEL'], device='cpu')" && \
     python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ.get('AUXILIARY_EMBEDDING_MODEL', 'TaylorAI/bge-micro-v2'), device='cpu')" && \
