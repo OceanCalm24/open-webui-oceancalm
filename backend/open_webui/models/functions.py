@@ -29,7 +29,6 @@ class Function(Base):
     is_global = Column(Boolean)
     updated_at = Column(BigInteger)
     created_at = Column(BigInteger)
-    tenant_id = Column(String, nullable=True)
 
     __table_args__ = (Index("is_global_idx", "is_global"),)
 
@@ -109,7 +108,6 @@ class FunctionsTable:
         user_id: str,
         type: str,
         form_data: FunctionForm,
-        tenant_id: Optional[str] = None,
         db: Optional[Session] = None,
     ) -> Optional[FunctionModel]:
         function = FunctionModel(
@@ -124,7 +122,7 @@ class FunctionsTable:
 
         try:
             with get_db_context(db) as db:
-                result = Function(**function.model_dump(), tenant_id=tenant_id)
+                result = Function(**function.model_dump())
                 db.add(result)
                 db.commit()
                 db.refresh(result)
@@ -217,16 +215,14 @@ class FunctionsTable:
             return []
 
     def get_functions(
-        self, active_only=False, include_valves=False, tenant_id: Optional[str] = None, db: Optional[Session] = None
+        self, active_only=False, include_valves=False, db: Optional[Session] = None
     ) -> list[FunctionModel | FunctionWithValvesModel]:
         with get_db_context(db) as db:
             if active_only:
-                query = db.query(Function).filter_by(is_active=True)
+                functions = db.query(Function).filter_by(is_active=True).all()
+
             else:
-                query = db.query(Function)
-            if tenant_id is not None:
-                query = query.filter(Function.tenant_id == tenant_id)
-            functions = query.all()
+                functions = db.query(Function).all()
 
             if include_valves:
                 return [

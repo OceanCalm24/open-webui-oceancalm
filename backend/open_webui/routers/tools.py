@@ -29,7 +29,7 @@ from open_webui.utils.plugin import (
     resolve_valves_schema_options,
 )
 from open_webui.utils.tools import get_tool_specs
-from open_webui.utils.auth import get_admin_user, get_verified_user, get_tenant_context
+from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.utils.access_control import (
     has_permission,
     has_access,
@@ -64,12 +64,11 @@ async def get_tools(
     request: Request,
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
-    tenant_id: Optional[str] = Depends(get_tenant_context),
 ):
     tools = []
 
     # Local Tools
-    for tool in Tools.get_tools(defer_content=True, tenant_id=tenant_id, db=db):
+    for tool in Tools.get_tools(defer_content=True, db=db):
         tool_module = (
             request.app.state.TOOLS.get(tool.id)
             if hasattr(request.app.state, "TOOLS")
@@ -359,7 +358,6 @@ async def create_new_tools(
     form_data: ToolForm,
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
-    tenant_id: Optional[str] = Depends(get_tenant_context),
 ):
     if user.role != "admin" and not (
         has_permission(
@@ -398,7 +396,7 @@ async def create_new_tools(
             TOOLS[form_data.id] = tool_module
 
             specs = get_tool_specs(TOOLS[form_data.id])
-            tools = Tools.insert_new_tool(user.id, form_data, specs, tenant_id=tenant_id, db=db)
+            tools = Tools.insert_new_tool(user.id, form_data, specs, db=db)
 
             tool_cache_dir = CACHE_DIR / "tools" / form_data.id
             tool_cache_dir.mkdir(parents=True, exist_ok=True)

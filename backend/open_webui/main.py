@@ -96,7 +96,6 @@ from open_webui.routers import (
     users,
     utils,
     scim,
-    tenants,
     terminals,
 )
 
@@ -1569,8 +1568,6 @@ app.include_router(terminals.router, prefix="/api/v1/terminals", tags=["terminal
 # SCIM 2.0 API for identity management
 if ENABLE_SCIM:
     app.include_router(scim.router, prefix="/api/v1/scim/v2", tags=["scim"])
-
-app.include_router(tenants.router, prefix="/api/v1/tenants", tags=["tenants"])
 
 
 try:

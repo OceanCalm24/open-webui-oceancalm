@@ -48,7 +48,7 @@ from open_webui.storage.provider import Storage
 
 
 from open_webui.config import BYPASS_ADMIN_ACCESS_CONTROL
-from open_webui.utils.auth import get_admin_user, get_verified_user, get_tenant_context
+from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.utils.misc import strict_match_mime_type
 from pydantic import BaseModel
 
@@ -331,12 +331,11 @@ async def list_files(
     user=Depends(get_verified_user),
     content: bool = Query(True),
     db: Session = Depends(get_session),
-    tenant_id: Optional[str] = Depends(get_tenant_context),
 ):
     if user.role == "admin" and BYPASS_ADMIN_ACCESS_CONTROL:
-        files = Files.get_files(tenant_id=tenant_id, db=db)
+        files = Files.get_files(db=db)
     else:
-        files = Files.get_files_by_user_id(user.id, tenant_id=tenant_id, db=db)
+        files = Files.get_files_by_user_id(user.id, db=db)
 
     if not content:
         for file in files:

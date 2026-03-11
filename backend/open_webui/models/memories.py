@@ -20,7 +20,6 @@ class Memory(Base):
     content = Column(Text)
     updated_at = Column(BigInteger)
     created_at = Column(BigInteger)
-    tenant_id = Column(String, nullable=True)
 
 
 class MemoryModel(BaseModel):
@@ -43,7 +42,6 @@ class MemoriesTable:
         self,
         user_id: str,
         content: str,
-        tenant_id: Optional[str] = None,
         db: Optional[Session] = None,
     ) -> Optional[MemoryModel]:
         with get_db_context(db) as db:
@@ -58,7 +56,7 @@ class MemoriesTable:
                     "updated_at": int(time.time()),
                 }
             )
-            result = Memory(**memory.model_dump(), tenant_id=tenant_id)
+            result = Memory(**memory.model_dump())
             db.add(result)
             db.commit()
             db.refresh(result)
@@ -98,14 +96,11 @@ class MemoriesTable:
                 return None
 
     def get_memories_by_user_id(
-        self, user_id: str, tenant_id: Optional[str] = None, db: Optional[Session] = None
+        self, user_id: str, db: Optional[Session] = None
     ) -> list[MemoryModel]:
         with get_db_context(db) as db:
             try:
-                query = db.query(Memory).filter_by(user_id=user_id)
-                if tenant_id is not None:
-                    query = query.filter(Memory.tenant_id == tenant_id)
-                memories = query.all()
+                memories = db.query(Memory).filter_by(user_id=user_id).all()
                 return [MemoryModel.model_validate(memory) for memory in memories]
             except Exception:
                 return None

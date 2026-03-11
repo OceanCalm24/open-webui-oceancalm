@@ -6,7 +6,7 @@ from typing import Optional
 
 from open_webui.models.memories import Memories, MemoryModel
 from open_webui.retrieval.vector.factory import VECTOR_DB_CLIENT
-from open_webui.utils.auth import get_verified_user, get_tenant_context
+from open_webui.utils.auth import get_verified_user
 from open_webui.internal.db import get_session
 from sqlalchemy.orm import Session
 
@@ -28,7 +28,6 @@ async def get_memories(
     request: Request,
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
-    tenant_id: Optional[str] = Depends(get_tenant_context),
 ):
     if not request.app.state.config.ENABLE_MEMORIES:
         raise HTTPException(
@@ -44,7 +43,7 @@ async def get_memories(
             detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
         )
 
-    return Memories.get_memories_by_user_id(user.id, tenant_id=tenant_id, db=db)
+    return Memories.get_memories_by_user_id(user.id, db=db)
 
 
 ############################
@@ -65,7 +64,6 @@ async def add_memory(
     request: Request,
     form_data: AddMemoryForm,
     user=Depends(get_verified_user),
-    tenant_id: Optional[str] = Depends(get_tenant_context),
 ):
     # NOTE: We intentionally do NOT use Depends(get_session) here.
     # Database operations (insert_new_memory) manage their own short-lived sessions.
@@ -85,7 +83,7 @@ async def add_memory(
             detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
         )
 
-    memory = Memories.insert_new_memory(user.id, form_data.content, tenant_id=tenant_id)
+    memory = Memories.insert_new_memory(user.id, form_data.content)
 
     vector = await request.app.state.EMBEDDING_FUNCTION(memory.content, user=user)
 

@@ -13,7 +13,6 @@
 	import { toast } from 'svelte-sonner';
 
 	import { updateUserRole, getUsers, deleteUserById } from '$lib/apis/users';
-	import { getTenants } from '$lib/apis/tenants';
 
 	import Pagination from '$lib/components/common/Pagination.svelte';
 	import ChatBubbles from '$lib/components/icons/ChatBubbles.svelte';
@@ -42,8 +41,6 @@
 
 	let users = null;
 	let total = null;
-	let tenantMap: Record<string, string> = {}; // tenant_id -> tenant name
-	$: isSuperAdmin = isSuperAdmin ?? false;
 
 	let query = '';
 	let searchDebounceTimer: ReturnType<typeof setTimeout>;
@@ -100,20 +97,6 @@
 			console.error(err);
 		}
 	};
-
-	const loadTenantMap = async () => {
-		if (!isSuperAdmin) return;
-		try {
-			const tenants = await getTenants(localStorage.token);
-			tenantMap = Object.fromEntries(tenants.map((t) => [t.id, t.name]));
-		} catch {
-			// silently ignore — tenant map is display-only
-		}
-	};
-
-	$: if (isSuperAdmin) {
-		loadTenantMap();
-	}
 
 	$: if (query !== undefined) {
 		clearTimeout(searchDebounceTimer);
@@ -320,12 +303,6 @@
 						</div>
 					</th>
 
-					{#if isSuperAdmin}
-						<th scope="col" class="px-2.5 py-2">
-							{$i18n.t('Tenant')}
-						</th>
-					{/if}
-
 					<th
 						scope="col"
 						class="px-2.5 py-2 cursor-pointer select-none"
@@ -418,22 +395,6 @@
 							</div>
 						</td>
 						<td class=" px-3 py-1"> {user.email} </td>
-
-						{#if isSuperAdmin}
-							<td class="px-3 py-1 text-xs">
-								{#if user.is_super_admin}
-									<span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 font-medium">
-										Super Admin
-									</span>
-								{:else if user.tenant_id}
-									<span class="text-gray-600 dark:text-gray-400">
-										{tenantMap[user.tenant_id] ?? user.tenant_id}
-									</span>
-								{:else}
-									<span class="text-gray-400">—</span>
-								{/if}
-							</td>
-						{/if}
 
 						<td class=" px-3 py-1">
 							{dayjs(user.last_active_at * 1000).fromNow()}

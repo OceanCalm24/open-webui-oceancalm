@@ -31,7 +31,6 @@ class Tool(Base):
 
     updated_at = Column(BigInteger)
     created_at = Column(BigInteger)
-    tenant_id = Column(String, nullable=True)
 
 
 class ToolMeta(BaseModel):
@@ -120,7 +119,6 @@ class ToolsTable:
         user_id: str,
         form_data: ToolForm,
         specs: list[dict],
-        tenant_id: Optional[str] = None,
         db: Optional[Session] = None,
     ) -> Optional[ToolModel]:
         with get_db_context(db) as db:
@@ -132,7 +130,6 @@ class ToolsTable:
                         "user_id": user_id,
                         "updated_at": int(time.time()),
                         "created_at": int(time.time()),
-                        "tenant_id": tenant_id,
                     }
                 )
                 db.add(result)
@@ -160,14 +157,12 @@ class ToolsTable:
             return None
 
     def get_tools(
-        self, defer_content: bool = False, tenant_id: Optional[str] = None, db: Optional[Session] = None
+        self, defer_content: bool = False, db: Optional[Session] = None
     ) -> list[ToolUserModel]:
         with get_db_context(db) as db:
             query = db.query(Tool).order_by(Tool.updated_at.desc())
             if defer_content:
                 query = query.options(defer(Tool.content), defer(Tool.specs))
-            if tenant_id is not None:
-                query = query.filter(Tool.tenant_id == tenant_id)
             all_tools = query.all()
 
             user_ids = list(set(tool.user_id for tool in all_tools))
@@ -199,10 +194,9 @@ class ToolsTable:
         user_id: str,
         permission: str = "write",
         defer_content: bool = False,
-        tenant_id: Optional[str] = None,
         db: Optional[Session] = None,
     ) -> list[ToolUserModel]:
-        tools = self.get_tools(defer_content=defer_content, tenant_id=tenant_id, db=db)
+        tools = self.get_tools(defer_content=defer_content, db=db)
         user_group_ids = {
             group.id for group in Groups.get_groups_by_member_id(user_id, db=db)
         }

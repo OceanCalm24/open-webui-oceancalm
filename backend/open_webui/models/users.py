@@ -73,9 +73,6 @@ class User(Base):
     oauth = Column(JSON, nullable=True)
     scim = Column(JSON, nullable=True)
 
-    tenant_id = Column(String, nullable=True)   # NULL for super admins
-    is_super_admin = Column(Boolean, default=False, nullable=False, server_default="false")
-
     last_active_at = Column(BigInteger)
     updated_at = Column(BigInteger)
     created_at = Column(BigInteger)
@@ -108,9 +105,6 @@ class UserModel(BaseModel):
 
     oauth: Optional[dict] = None
     scim: Optional[dict] = None
-
-    tenant_id: Optional[str] = None
-    is_super_admin: bool = False
 
     last_active_at: int  # timestamp in epoch
     updated_at: int  # timestamp in epoch
@@ -387,15 +381,11 @@ class UsersTable:
         filter: Optional[dict] = None,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
-        tenant_id: Optional[str] = None,
         db: Optional[Session] = None,
     ) -> dict:
         with get_db_context(db) as db:
             # Join GroupMember so we can order by group_id when requested
             query = db.query(User).options(defer(User.profile_image_url))
-
-            if tenant_id is not None:
-                query = query.filter(User.tenant_id == tenant_id)
 
             if filter:
                 query_key = filter.get("query")
@@ -861,31 +851,6 @@ class UsersTable:
                 three_minutes_ago = int(time.time()) - 180
                 return user.last_active_at >= three_minutes_ago
             return False
-
-    def get_users_by_tenant_id(
-        self, tenant_id: str, db: Optional[Session] = None
-    ) -> list[UserModel]:
-        try:
-            with get_db_context(db) as db:
-                users = db.query(User).filter(User.tenant_id == tenant_id).all()
-                return [UserModel.model_validate(u) for u in users]
-        except Exception:
-            return []
-
-    def update_user_tenant(
-        self, user_id: str, tenant_id: Optional[str], db: Optional[Session] = None
-    ) -> Optional[UserModel]:
-        try:
-            with get_db_context(db) as db:
-                user = db.query(User).filter_by(id=user_id).first()
-                if not user:
-                    return None
-                user.tenant_id = tenant_id
-                db.commit()
-                db.refresh(user)
-                return UserModel.model_validate(user)
-        except Exception:
-            return None
 
 
 Users = UsersTable()

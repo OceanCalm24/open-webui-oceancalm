@@ -306,6 +306,4 @@ export type SessionUser = {
 	name: string;
 	role: string;
 	profile_image_url: string;
-	is_super_admin: boolean;
-	tenant_id: string | null;
 };

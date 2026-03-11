@@ -29,7 +29,6 @@ class File(Base):
 
     created_at = Column(BigInteger)
     updated_at = Column(BigInteger)
-    tenant_id = Column(String, nullable=True)
 
 
 class FileModel(BaseModel):
@@ -126,7 +125,7 @@ class FileListResponse(BaseModel):
 
 class FilesTable:
     def insert_new_file(
-        self, user_id: str, form_data: FileForm, tenant_id: Optional[str] = None, db: Optional[Session] = None
+        self, user_id: str, form_data: FileForm, db: Optional[Session] = None
     ) -> Optional[FileModel]:
         with get_db_context(db) as db:
             file_data = form_data.model_dump()
@@ -146,7 +145,7 @@ class FilesTable:
             )
 
             try:
-                result = File(**file.model_dump(), tenant_id=tenant_id)
+                result = File(**file.model_dump())
                 db.add(result)
                 db.commit()
                 db.refresh(result)
@@ -200,12 +199,9 @@ class FilesTable:
             except Exception:
                 return None
 
-    def get_files(self, tenant_id: Optional[str] = None, db: Optional[Session] = None) -> list[FileModel]:
+    def get_files(self, db: Optional[Session] = None) -> list[FileModel]:
         with get_db_context(db) as db:
-            query = db.query(File)
-            if tenant_id is not None:
-                query = query.filter(File.tenant_id == tenant_id)
-            return [FileModel.model_validate(file) for file in query.all()]
+            return [FileModel.model_validate(file) for file in db.query(File).all()]
 
     def check_access_by_user_id(
         self, id, user_id, permission="write", db: Optional[Session] = None
@@ -251,15 +247,12 @@ class FilesTable:
             ]
 
     def get_files_by_user_id(
-        self, user_id: str, tenant_id: Optional[str] = None, db: Optional[Session] = None
+        self, user_id: str, db: Optional[Session] = None
     ) -> list[FileModel]:
         with get_db_context(db) as db:
-            query = db.query(File).filter_by(user_id=user_id)
-            if tenant_id is not None:
-                query = query.filter(File.tenant_id == tenant_id)
             return [
                 FileModel.model_validate(file)
-                for file in query.all()
+                for file in db.query(File).filter_by(user_id=user_id).all()
             ]
 
     @staticmethod

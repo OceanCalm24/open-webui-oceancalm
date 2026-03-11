@@ -81,7 +81,6 @@ class Model(Base):
 
     updated_at = Column(BigInteger)
     created_at = Column(BigInteger)
-    tenant_id = Column(String, nullable=True)
 
 
 class ModelModel(BaseModel):
@@ -162,7 +161,7 @@ class ModelsTable:
         return ModelModel.model_validate(model_data)
 
     def insert_new_model(
-        self, form_data: ModelForm, user_id: str, tenant_id: Optional[str] = None, db: Optional[Session] = None
+        self, form_data: ModelForm, user_id: str, db: Optional[Session] = None
     ) -> Optional[ModelModel]:
         try:
             with get_db_context(db) as db:
@@ -172,7 +171,6 @@ class ModelsTable:
                         "user_id": user_id,
                         "created_at": int(time.time()),
                         "updated_at": int(time.time()),
-                        "tenant_id": tenant_id,
                     }
                 )
                 db.add(result)
@@ -190,12 +188,9 @@ class ModelsTable:
             log.exception(f"Failed to insert a new model: {e}")
             return None
 
-    def get_all_models(self, tenant_id: Optional[str] = None, db: Optional[Session] = None) -> list[ModelModel]:
+    def get_all_models(self, db: Optional[Session] = None) -> list[ModelModel]:
         with get_db_context(db) as db:
-            query = db.query(Model)
-            if tenant_id is not None:
-                query = query.filter(Model.tenant_id == tenant_id)
-            all_models = query.all()
+            all_models = db.query(Model).all()
             model_ids = [model.id for model in all_models]
             grants_map = AccessGrants.get_grants_by_resources("model", model_ids, db=db)
             return [
@@ -205,12 +200,9 @@ class ModelsTable:
                 for model in all_models
             ]
 
-    def get_models(self, tenant_id: Optional[str] = None, db: Optional[Session] = None) -> list[ModelUserResponse]:
+    def get_models(self, db: Optional[Session] = None) -> list[ModelUserResponse]:
         with get_db_context(db) as db:
-            query = db.query(Model).filter(Model.base_model_id != None)
-            if tenant_id is not None:
-                query = query.filter(Model.tenant_id == tenant_id)
-            all_models = query.all()
+            all_models = db.query(Model).filter(Model.base_model_id != None).all()
 
             user_ids = list(set(model.user_id for model in all_models))
             model_ids = [model.id for model in all_models]

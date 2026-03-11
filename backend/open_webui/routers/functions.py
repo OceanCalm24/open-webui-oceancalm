@@ -24,7 +24,7 @@ from open_webui.utils.plugin import (
 from open_webui.config import CACHE_DIR
 from open_webui.constants import ERROR_MESSAGES
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from open_webui.utils.auth import get_admin_user, get_verified_user, get_tenant_context
+from open_webui.utils.auth import get_admin_user, get_verified_user
 from pydantic import BaseModel, HttpUrl
 from open_webui.internal.db import get_session
 from sqlalchemy.orm import Session
@@ -41,11 +41,9 @@ router = APIRouter()
 
 @router.get("/", response_model=list[FunctionResponse])
 async def get_functions(
-    user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
-    tenant_id: Optional[str] = Depends(get_tenant_context),
+    user=Depends(get_verified_user), db: Session = Depends(get_session)
 ):
-    return Functions.get_functions(tenant_id=tenant_id, db=db)
+    return Functions.get_functions(db=db)
 
 
 @router.get("/list", response_model=list[FunctionUserResponse])
@@ -202,7 +200,6 @@ async def create_new_function(
     form_data: FunctionForm,
     user=Depends(get_admin_user),
     db: Session = Depends(get_session),
-    tenant_id: Optional[str] = Depends(get_tenant_context),
 ):
     if not form_data.id.isidentifier():
         raise HTTPException(
@@ -226,7 +223,7 @@ async def create_new_function(
             FUNCTIONS[form_data.id] = function_module
 
             function = Functions.insert_new_function(
-                user.id, function_type, form_data, tenant_id=tenant_id, db=db
+                user.id, function_type, form_data, db=db
             )
 
             function_cache_dir = CACHE_DIR / "functions" / form_data.id

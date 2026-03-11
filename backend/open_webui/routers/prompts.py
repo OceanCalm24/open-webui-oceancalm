@@ -17,7 +17,7 @@ from open_webui.models.prompt_history import (
     PromptHistoryResponse,
 )
 from open_webui.constants import ERROR_MESSAGES
-from open_webui.utils.auth import get_admin_user, get_verified_user, get_tenant_context
+from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.utils.access_control import has_permission, filter_allowed_access_grants
 from open_webui.config import BYPASS_ADMIN_ACCESS_CONTROL
 from open_webui.internal.db import get_session
@@ -47,12 +47,10 @@ PAGE_ITEM_COUNT = 30
 
 @router.get("/", response_model=list[PromptModel])
 async def get_prompts(
-    user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
-    tenant_id: Optional[str] = Depends(get_tenant_context),
+    user=Depends(get_verified_user), db: Session = Depends(get_session)
 ):
     if user.role == "admin" and BYPASS_ADMIN_ACCESS_CONTROL:
-        prompts = Prompts.get_prompts(tenant_id=tenant_id, db=db)
+        prompts = Prompts.get_prompts(db=db)
     else:
         prompts = Prompts.get_prompts_by_user_id(user.id, "read", db=db)
 
@@ -154,7 +152,6 @@ async def create_new_prompt(
     form_data: PromptForm,
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
-    tenant_id: Optional[str] = Depends(get_tenant_context),
 ):
     if user.role != "admin" and not (
         has_permission(
@@ -177,7 +174,7 @@ async def create_new_prompt(
 
     prompt = Prompts.get_prompt_by_command(form_data.command, db=db)
     if prompt is None:
-        prompt = Prompts.insert_new_prompt(user.id, form_data, tenant_id=tenant_id, db=db)
+        prompt = Prompts.insert_new_prompt(user.id, form_data, db=db)
 
         if prompt:
             return prompt

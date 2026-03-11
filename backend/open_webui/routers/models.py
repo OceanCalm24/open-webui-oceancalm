@@ -32,7 +32,7 @@ from fastapi import (
 from fastapi.responses import FileResponse, StreamingResponse
 
 
-from open_webui.utils.auth import get_admin_user, get_verified_user, get_tenant_context
+from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.utils.access_control import has_permission, filter_allowed_access_grants
 from open_webui.config import BYPASS_ADMIN_ACCESS_CONTROL, STATIC_DIR
 from open_webui.internal.db import get_session
@@ -174,7 +174,6 @@ async def create_new_model(
     form_data: ModelForm,
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
-    tenant_id: Optional[str] = Depends(get_tenant_context),
 ):
     if user.role != "admin" and not has_permission(
         user.id, "workspace.models", request.app.state.config.USER_PERMISSIONS, db=db
@@ -198,7 +197,7 @@ async def create_new_model(
         )
 
     else:
-        model = Models.insert_new_model(form_data, user.id, tenant_id=tenant_id, db=db)
+        model = Models.insert_new_model(form_data, user.id, db=db)
         if model:
             return model
         else:

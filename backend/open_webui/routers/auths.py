@@ -148,8 +148,6 @@ def create_session_response(
         "role": user.role,
         "profile_image_url": f"/api/v1/users/{user.id}/profile/image",
         "permissions": user_permissions,
-        "is_super_admin": getattr(user, "is_super_admin", False),
-        "tenant_id": getattr(user, "tenant_id", None),
     }
 
 
@@ -161,8 +159,6 @@ def create_session_response(
 class SessionUserResponse(Token, UserProfileImageResponse):
     expires_at: Optional[int] = None
     permissions: Optional[dict] = None
-    is_super_admin: bool = False
-    tenant_id: Optional[str] = None
 
 
 class SessionUserInfoResponse(SessionUserResponse, UserStatus):
@@ -229,8 +225,6 @@ async def get_session_user(
         "status_message": user.status_message,
         "status_expires_at": user.status_expires_at,
         "permissions": user_permissions,
-        "is_super_admin": user.is_super_admin,
-        "tenant_id": user.tenant_id,
     }
 
 
