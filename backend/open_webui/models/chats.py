@@ -739,13 +739,13 @@ class ChatTable:
                         raise ValueError("Invalid order_by field")
 
                     if direction.lower() == "asc":
-                        query = query.order_by(getattr(Chat, order_by).asc())
+                        query = query.order_by(getattr(Chat, order_by).asc(), Chat.id)
                     elif direction.lower() == "desc":
-                        query = query.order_by(getattr(Chat, order_by).desc())
+                        query = query.order_by(getattr(Chat, order_by).desc(), Chat.id)
                     else:
                         raise ValueError("Invalid direction for ordering")
             else:
-                query = query.order_by(Chat.updated_at.desc())
+                query = query.order_by(Chat.updated_at.desc(), Chat.id)
 
             query = query.with_entities(
                 Chat.id, Chat.title, Chat.updated_at, Chat.created_at
@@ -798,13 +798,13 @@ class ChatTable:
                         raise ValueError("Invalid order_by field")
 
                     if direction.lower() == "asc":
-                        query = query.order_by(getattr(Chat, order_by).asc())
+                        query = query.order_by(getattr(Chat, order_by).asc(), Chat.id)
                     elif direction.lower() == "desc":
-                        query = query.order_by(getattr(Chat, order_by).desc())
+                        query = query.order_by(getattr(Chat, order_by).desc(), Chat.id)
                     else:
                         raise ValueError("Invalid direction for ordering")
             else:
-                query = query.order_by(Chat.updated_at.desc())
+                query = query.order_by(Chat.updated_at.desc(), Chat.id)
 
             # Select only the columns needed for SharedChatResponse
             # to avoid loading the heavy chat JSON blob
@@ -859,13 +859,13 @@ class ChatTable:
 
                 if order_by and direction and getattr(Chat, order_by):
                     if direction.lower() == "asc":
-                        query = query.order_by(getattr(Chat, order_by).asc())
+                        query = query.order_by(getattr(Chat, order_by).asc(), Chat.id)
                     elif direction.lower() == "desc":
-                        query = query.order_by(getattr(Chat, order_by).desc())
+                        query = query.order_by(getattr(Chat, order_by).desc(), Chat.id)
                     else:
                         raise ValueError("Invalid direction for ordering")
             else:
-                query = query.order_by(Chat.updated_at.desc())
+                query = query.order_by(Chat.updated_at.desc(), Chat.id)
 
             if skip:
                 query = query.offset(skip)
@@ -901,7 +901,7 @@ class ChatTable:
             if not include_archived:
                 query = query.filter_by(archived=False)
 
-            query = query.order_by(Chat.updated_at.desc()).with_entities(
+            query = query.order_by(Chat.updated_at.desc(), Chat.id).with_entities(
                 Chat.id, Chat.title, Chat.updated_at, Chat.created_at
             )
 
@@ -1051,14 +1051,18 @@ class ChatTable:
                 if order_by and direction:
                     if hasattr(Chat, order_by):
                         if direction.lower() == "asc":
-                            query = query.order_by(getattr(Chat, order_by).asc())
+                            query = query.order_by(
+                                getattr(Chat, order_by).asc(), Chat.id
+                            )
                         elif direction.lower() == "desc":
-                            query = query.order_by(getattr(Chat, order_by).desc())
+                            query = query.order_by(
+                                getattr(Chat, order_by).desc(), Chat.id
+                            )
                 else:
-                    query = query.order_by(Chat.updated_at.desc())
+                    query = query.order_by(Chat.updated_at.desc(), Chat.id)
 
             else:
-                query = query.order_by(Chat.updated_at.desc())
+                query = query.order_by(Chat.updated_at.desc(), Chat.id)
 
             total = query.count()
 
@@ -1200,7 +1204,7 @@ class ChatTable:
             if folder_ids:
                 query = query.filter(Chat.folder_id.in_(folder_ids))
 
-            query = query.order_by(Chat.updated_at.desc())
+            query = query.order_by(Chat.updated_at.desc(), Chat.id)
 
             # Check if the database dialect is either 'sqlite' or 'postgresql'
             dialect_name = db.bind.dialect.name
@@ -1321,7 +1325,7 @@ class ChatTable:
             query = query.filter(or_(Chat.pinned == False, Chat.pinned == None))
             query = query.filter_by(archived=False)
 
-            query = query.order_by(Chat.updated_at.desc())
+            query = query.order_by(Chat.updated_at.desc(), Chat.id)
 
             if skip:
                 query = query.offset(skip)

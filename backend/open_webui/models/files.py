@@ -4,6 +4,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 from open_webui.internal.db import Base, JSONField, get_db, get_db_context
+from open_webui.utils.misc import sanitize_metadata
 from pydantic import BaseModel, ConfigDict, model_validator
 from sqlalchemy import BigInteger, Column, String, Text, JSON
 
@@ -128,9 +129,16 @@ class FilesTable:
         self, user_id: str, form_data: FileForm, tenant_id: Optional[str] = None, db: Optional[Session] = None
     ) -> Optional[FileModel]:
         with get_db_context(db) as db:
+            file_data = form_data.model_dump()
+
+            # Sanitize meta to remove non-JSON-serializable objects
+            # (e.g. callable tool functions, MCP client instances from middleware)
+            if file_data.get("meta"):
+                file_data["meta"] = sanitize_metadata(file_data["meta"])
+
             file = FileModel(
                 **{
-                    **form_data.model_dump(),
+                    **file_data,
                     "user_id": user_id,
                     "created_at": int(time.time()),
                     "updated_at": int(time.time()),
@@ -296,7 +304,7 @@ class FilesTable:
             db: Optional database session.
 
         Returns:
-            List of matching FileModel objects, ordered by updated_at descending.
+            List of matching FileModel objects, ordered by created_at descending.
         """
         with get_db_context(db) as db:
             query = db.query(File)
@@ -310,7 +318,7 @@ class FilesTable:
 
             return [
                 FileModel.model_validate(file)
-                for file in query.order_by(File.updated_at.desc())
+                for file in query.order_by(File.created_at.desc(), File.id.desc())
                 .offset(skip)
                 .limit(limit)
                 .all()
