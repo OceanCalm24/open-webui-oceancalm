@@ -59,6 +59,7 @@ ARG GID
 
 # Python settings
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app/backend
 
 ## Basis ##
 ENV ENV=prod \
@@ -135,11 +136,12 @@ RUN apt-get update && \
 # install python dependencies
 COPY --chown=$UID:$GID ./backend/requirements.txt ./requirements.txt
 
-# Unique ID to force a clean build on Railway: 9f8e7d6c5b4a3210
+# NUCLEAR CACHE BUST ID: a1b2c3d4e5f6g7h8i9j0
 RUN python3 -m pip install --no-cache-dir --upgrade pip && \
     python3 -m pip install --no-cache-dir -r requirements.txt && \
-    python3 -c "import sqlalchemy; import uvicorn; import fastapi; print('VERIFICATION SUCCESS: ALL MODULES FOUND')" && \
-    if [ "$USE_CUDA" = "true" ]; then \
+    python3 -c "import sqlalchemy; import uvicorn; import fastapi; import typer; print('--- BUILD VERIFICATION SUCCESS ---')"
+
+RUN if [ "$USE_CUDA" = "true" ]; then \
     pip3 install 'torch<=2.9.1' torchvision torchaudio --index-url https://download.pytorch.org/whl/$USE_CUDA_DOCKER_VER --no-cache-dir && \
     python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['RAG_EMBEDDING_MODEL'], device='cpu')" && \
     python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ.get('AUXILIARY_EMBEDDING_MODEL', 'TaylorAI/bge-micro-v2'), device='cpu')" && \
