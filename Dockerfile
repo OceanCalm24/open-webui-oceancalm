@@ -136,8 +136,10 @@ RUN apt-get update && \
 # install python dependencies
 COPY --chown=$UID:$GID ./backend/requirements.txt ./requirements.txt
 
-# NUCLEAR CACHE BUST ID: a1b2c3d4e5f6g7h8i9j0
-RUN python3 -m pip install --no-cache-dir --upgrade pip && \
+# NUCLEAR CACHE BUST ID: ULTIMATE_CLEAN_V10
+RUN echo "--- DEBUG: requirements.txt content ---" && \
+    cat requirements.txt | grep ddgs && \
+    python3 -m pip install --no-cache-dir --upgrade pip && \
     python3 -m pip install --no-cache-dir -r requirements.txt && \
     python3 -c "import sqlalchemy; import uvicorn; import fastapi; import typer; print('--- BUILD VERIFICATION SUCCESS ---')"
 
