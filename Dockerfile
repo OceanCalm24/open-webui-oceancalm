@@ -135,10 +135,10 @@ RUN apt-get update && \
 # install python dependencies
 COPY --chown=$UID:$GID ./backend/requirements.txt ./requirements.txt
 
-RUN echo "ULTIMATE_CLEAN_V3" && \
-    python3 -m pip install --no-cache-dir --upgrade pip && \
+# Unique ID to force a clean build on Railway: 9f8e7d6c5b4a3210
+RUN python3 -m pip install --no-cache-dir --upgrade pip && \
     python3 -m pip install --no-cache-dir -r requirements.txt && \
-    python3 -c "import sqlalchemy; import uvicorn; print('SUCCESS: Core modules verified')" && \
+    python3 -c "import sqlalchemy; import uvicorn; import fastapi; print('VERIFICATION SUCCESS: ALL MODULES FOUND')" && \
     if [ "$USE_CUDA" = "true" ]; then \
     pip3 install 'torch<=2.9.1' torchvision torchaudio --index-url https://download.pytorch.org/whl/$USE_CUDA_DOCKER_VER --no-cache-dir && \
     python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['RAG_EMBEDDING_MODEL'], device='cpu')" && \
