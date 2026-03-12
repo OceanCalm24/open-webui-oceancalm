@@ -1,3 +1,4 @@
+# last-updated: 2026-03-11T18:30:00Z
 fastapi==0.135.1
 uvicorn[standard]==0.41.0
 typer>=0.12.0
