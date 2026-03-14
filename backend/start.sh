@@ -70,17 +70,6 @@ if [ -n "$SPACE_ID" ]; then
 fi
 
 PYTHON_CMD=$(command -v python3 || command -v python)
-
-echo "--- RUNTIME DIAGNOSTICS ---"
-echo "Python path: $PYTHON_CMD"
-echo "Python version: $($PYTHON_CMD --version)"
-echo "Current directory: $(pwd)"
-echo "PYTHONPATH: $PYTHONPATH"
-$PYTHON_CMD -m site
-echo "Installed packages (pip list):"
-$PYTHON_CMD -m pip list
-echo "---------------------------"
-
 UVICORN_WORKERS="${UVICORN_WORKERS:-1}"
 
 # If script is called with arguments, use them; otherwise use default workers
